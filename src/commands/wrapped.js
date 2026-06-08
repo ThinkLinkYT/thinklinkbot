@@ -6,6 +6,7 @@ const {
   ButtonStyle
 } = require("discord.js");
 const crypto = require("crypto");
+const https = require("https");
 const zlib = require("zlib");
 const axios = require("axios");
 
@@ -329,6 +330,7 @@ async function publishWrappedPayload(payload) {
   const apiUrl = process.env.WRAPPED_API_URL;
   if (!apiUrl) return null;
 
+  const allowInsecureTls = process.env.WRAPPED_ALLOW_INSECURE_TLS === "true";
   const response = await axios.post(
     apiUrl,
     {
@@ -337,7 +339,10 @@ async function publishWrappedPayload(payload) {
     },
     {
       timeout: 10000,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      ...(allowInsecureTls
+        ? { httpsAgent: new https.Agent({ rejectUnauthorized: false }) }
+        : {})
     }
   );
 
@@ -350,6 +355,7 @@ async function publishWrappedPayload(payload) {
 
 async function buildWrappedUrl(payload) {
   const pageUrl = process.env.WRAPPED_PAGE_URL || DEFAULT_WRAPPED_PAGE_URL;
+  let publishError = "";
 
   try {
     const publishedId = await publishWrappedPayload(payload);
@@ -364,6 +370,18 @@ async function buildWrappedUrl(payload) {
     }
   } catch (err) {
     console.error("Failed to publish Wrapped payload:", err);
+    publishError = err.response?.data?.error || err.message || "Wrapped API publish failed";
+  }
+
+  if (process.env.WRAPPED_API_URL && publishError) {
+    const setupUrl = new URL(pageUrl);
+    setupUrl.searchParams.set("setup", "api-error");
+    setupUrl.searchParams.set("reason", publishError.slice(0, 180));
+    return {
+      url: setupUrl.toString(),
+      mode: "api-error",
+      error: publishError
+    };
   }
 
   const url = new URL(pageUrl);
@@ -398,7 +416,7 @@ module.exports = {
     const economy = buildEconomySnapshot(ensureUser(i.user.id));
     const payload = buildWrappedPayload(i, stats, economy);
     saveWrappedStats();
-    const { url, mode } = await buildWrappedUrl(payload);
+    const { url, mode, error } = await buildWrappedUrl(payload);
 
     const embed = new EmbedBuilder()
       .setAuthor({
@@ -419,6 +437,8 @@ module.exports = {
           value:
             mode === "api"
               ? "Saved by unique page ID"
+              : mode === "api-error"
+              ? `API setup problem: ${String(error || "Unknown error").slice(0, 120)}`
               : mode === "setup-required"
               ? "Waiting for Wrapped API setup"
               : "Encoded into this private link",
