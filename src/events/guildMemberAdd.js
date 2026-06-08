@@ -1,6 +1,6 @@
 const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
-const { sendMemberEmbed, sendAuditLog } = require("../utils/audit");
-const { EmbedBuilder } = require("discord.js");
+const { sendMemberEmbed } = require("../utils/audit");
+const { applyUnderageTimeout } = require("../utils/underageTimeouts");
 
 const WELCOME_CHANNEL_ID = "1265100685591052288";
 
@@ -61,32 +61,8 @@ module.exports = {
       }
     );
 
-    // Auto-timeout for accounts < 7 days
     try {
-      const accountAgeMs = Date.now() - member.user.createdTimestamp;
-      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-      if (accountAgeMs < oneWeekMs) {
-        const remainingMs = oneWeekMs - accountAgeMs;
-        await member.timeout(
-          remainingMs,
-          "Account too new — auto timeout for safety"
-        );
-
-        const embed = new EmbedBuilder()
-          .setAuthor({ name: `${member.user.tag}`, iconURL: avatar })
-          .setTitle("⏳ Auto Timeout Applied")
-          .setDescription(
-            `User: <@${member.id}>\n` +
-              `Account Age: **${Math.floor(
-                accountAgeMs / (1000 * 60 * 60 * 24)
-              )} days**\n` +
-              `Timeout until account reaches 7 days old.`
-          )
-          .setColor(0xE67E22)
-          .setTimestamp();
-
-        sendAuditLog(member.guild, embed);
-      }
+      await applyUnderageTimeout(member);
     } catch (err) {
       console.error("Failed to apply auto-timeout:", err);
     }

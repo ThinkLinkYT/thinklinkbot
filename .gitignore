@@ -14,6 +14,7 @@ data/pingSettings.json
 data/questConfig.json
 data/sessions.json
 data/shop.json
+data/underageTimeouts.json
 data/users.json
 data/warnings.json
 data/wrappedStats.json

@@ -6,6 +6,7 @@ const { loadLeaderboard, loadSessions } = require("../utils/counting");
 const { loadGiveaways } = require("../utils/giveaways");
 const { loadWrappedStats } = require("../utils/wrapped");
 const { checkWeeklyReset } = require("../utils/questUtils");
+const { startUnderageTimeoutMonitor } = require("../utils/underageTimeouts");
 
 const targetUserId = process.env.THINKLINK_USER_ID || "1169759575981953177";
 
@@ -59,6 +60,7 @@ module.exports = {
     loadWrappedStats();
     checkWeeklyReset();
     setInterval(checkWeeklyReset, 60 * 60 * 1000);
+    startUnderageTimeoutMonitor(client);
 
     // Load all commands from src/commands recursively
     const commandsPath = path.join(__dirname, "../commands");

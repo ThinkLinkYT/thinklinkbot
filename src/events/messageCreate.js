@@ -1,6 +1,15 @@
 const { countingSessions, countingLeaderboard, saveSessions, saveLeaderboard, resetSession } = require("../utils/counting");
 const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
+const { cacheMessageForAudit } = require("../utils/messageAudit");
 const crypto = require("crypto");
+
+const DUPLICATE_WINDOW_MS = 10 * 1000;
+const DUPLICATE_CHANNEL_THRESHOLD = 4;
+const BURST_WINDOW_MS = 10 * 1000;
+const BURST_CHANNEL_THRESHOLD = 4;
+const BURST_MESSAGE_THRESHOLD = 5;
+const MULTI_CHANNEL_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+const MIN_SIGNATURE_LENGTH = 8;
 
 function pruneActivityMap(map, windowMs, now) {
   for (const [key, entries] of map.entries()) {
@@ -13,7 +22,7 @@ function pruneActivityMap(map, windowMs, now) {
 module.exports = {
   name: "messageCreate",
   async execute(msg) {
-    if (msg.author.bot) return;
+    if (msg.author.bot || !msg.guild) return;
 
     // ============================================================
     // 🔐 ANTI MULTI-CHANNEL HACK PROTECTION (USER + MESSAGE BASED)
@@ -29,17 +38,18 @@ module.exports = {
 
     const msgCache = msg.client._duplicateMessageCache;
     const userCache = msg.client._userChannelActivity;
-    const WINDOW = 5000;
+    const pruneWindow = Math.max(DUPLICATE_WINDOW_MS, BURST_WINDOW_MS);
     const nowForPrune = Date.now();
 
     if (!msg.client._lastProtectionPrune || nowForPrune - msg.client._lastProtectionPrune > 60000) {
-      pruneActivityMap(msgCache, WINDOW, nowForPrune);
-      pruneActivityMap(userCache, WINDOW, nowForPrune);
+      pruneActivityMap(msgCache, pruneWindow, nowForPrune);
+      pruneActivityMap(userCache, pruneWindow, nowForPrune);
       msg.client._lastProtectionPrune = nowForPrune;
     }
 
     // Wait briefly so Discord can attach embeds (important for forwarded messages)
     await new Promise(res => setTimeout(res, 150));
+    cacheMessageForAudit(msg);
 
     // ---------------------------
     // 1. MESSAGE SIGNATURE CHECK
@@ -65,12 +75,16 @@ module.exports = {
       });
     }
 
-    if (signature.length > 0) {
-      const hash = crypto.createHash("sha256").update(signature).digest("hex");
+    if (signature.length >= MIN_SIGNATURE_LENGTH) {
+      const hash = crypto
+        .createHash("sha256")
+        .update(`${msg.author.id}:${signature}`)
+        .digest("hex");
 
       if (!msgCache.has(hash)) msgCache.set(hash, []);
 
       msgCache.get(hash).push({
+        userId: msg.author.id,
         channelId: msg.channel.id,
         messageId: msg.id,
         timestamp: Date.now()
@@ -78,12 +92,12 @@ module.exports = {
 
       const now = Date.now();
 
-      const filtered = msgCache.get(hash).filter(e => now - e.timestamp <= WINDOW);
+      const filtered = msgCache.get(hash).filter(e => now - e.timestamp <= DUPLICATE_WINDOW_MS);
       msgCache.set(hash, filtered);
 
       const uniqueChannels = new Set(filtered.map(e => e.channelId));
 
-      if (uniqueChannels.size >= 3) {
+      if (uniqueChannels.size >= DUPLICATE_CHANNEL_THRESHOLD) {
         // Delete all copies
         for (const entry of filtered) {
           try {
@@ -96,12 +110,12 @@ module.exports = {
         // TIMEOUT USER FOR 1 DAY
         try {
           const member = await msg.guild?.members.fetch(msg.author.id);
-          if (member) await member.timeout(24 * 60 * 60 * 1000, "Multi-channel hack behavior detected");
+          if (member) await member.timeout(MULTI_CHANNEL_TIMEOUT_MS, "Multi-channel hacked-account blast detected");
         } catch (err) {
           console.error("Failed to timeout user:", err);
         }
 
-        console.log("🛑 Hack detected: identical message across channels.");
+        console.log(`Multi-channel duplicate blast detected for user ${msg.author.id}.`);
         msgCache.delete(hash);
         return;
       }
@@ -122,13 +136,16 @@ module.exports = {
 
     // Clean old entries
     const now = Date.now();
-    const recent = userCache.get(userId).filter(e => now - e.timestamp <= WINDOW);
+    const recent = userCache.get(userId).filter(e => now - e.timestamp <= BURST_WINDOW_MS);
     userCache.set(userId, recent);
 
     // Count unique channels
     const userChannels = new Set(recent.map(e => e.channelId));
 
-    if (userChannels.size >= 3) {
+    if (
+      userChannels.size >= BURST_CHANNEL_THRESHOLD &&
+      recent.length >= BURST_MESSAGE_THRESHOLD
+    ) {
       // Delete all recent messages from this user across channels
       for (const entry of recent) {
         try {
@@ -141,12 +158,12 @@ module.exports = {
       // TIMEOUT USER FOR 1 DAY
       try {
         const member = await msg.guild?.members.fetch(userId);
-        if (member) await member.timeout(24 * 60 * 60 * 1000, "Multi-channel hack behavior detected");
+        if (member) await member.timeout(MULTI_CHANNEL_TIMEOUT_MS, "Multi-channel hacked-account burst detected");
       } catch (err) {
         console.error("Failed to timeout user:", err);
       }
 
-      console.log(`🛑 Hack detected: user ${userId} posting in multiple channels.`);
+      console.log(`Multi-channel burst detected for user ${userId}.`);
       userCache.delete(userId);
       return;
     }
