@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser } = require("../utils/database");
+const { formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,8 +21,9 @@ module.exports = {
             .setTitle(`💰 Balance for ${target.username}`)
             .setColor("Gold")
             .addFields(
-                { name: "Wallet", value: `${userData.wallet}`, inline: true },
-                { name: "Bank", value: `${userData.bank}`, inline: true }
+                { name: "Wallet", value: formatCoins(userData.wallet), inline: true },
+                { name: "Bank", value: formatCoins(userData.bank), inline: true },
+                { name: "Total", value: formatCoins(userData.wallet + userData.bank), inline: true }
             )
             .setThumbnail(target.displayAvatarURL({ dynamic: true }));
 

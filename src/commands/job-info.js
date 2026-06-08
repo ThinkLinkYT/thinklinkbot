@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const jobs = require("../../data/jobs.json");
-const { ensureUser } = require("../utils/database");
+const { ensureUser, updateUser } = require("../utils/database");
+const { formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,10 +16,14 @@ module.exports = {
         }
 
         const job = jobs[user.job.name];
+        if (!job) {
+            return interaction.reply("Your current job no longer exists. Use /job-quit, then apply for a new job.");
+        }
 
         // Fallback for old users missing pay field
         if (user.job.pay === undefined) {
             user.job.pay = Math.floor(Math.random() * (job.max - job.min + 1)) + job.min;
+            updateUser(interaction.user.id, user);
         }
 
         const now = Date.now();
@@ -38,11 +43,11 @@ module.exports = {
             .addFields(
                 { name: "Job", value: user.job.name, inline: true },
                 { name: "Level", value: `${user.job.level}`, inline: true },
-                { name: "Fixed Pay", value: `${user.job.pay} coins`, inline: true },
-                { name: "Raise Bonus", value: `+${user.job.raise} coins`, inline: true },
+                { name: "Fixed Pay", value: formatCoins(user.job.pay), inline: true },
+                { name: "Raise Bonus", value: `+${formatCoins(user.job.raise)}`, inline: true },
                 { name: "Daily Streak", value: `${user.job.streak} days`, inline: true },
                 { name: "Next Payday", value: nextPayday, inline: true },
-                { name: "Original Pay Range", value: `${job.min} - ${job.max} coins`, inline: false }
+                { name: "Original Pay Range", value: `${formatCoins(job.min)} - ${formatCoins(job.max)}`, inline: false }
             )
             .setFooter({ text: "Use /payday every 24 hours to collect your earnings." });
 

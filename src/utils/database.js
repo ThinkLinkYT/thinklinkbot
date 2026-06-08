@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { readJSON, writeJSONAtomic } = require("./jsonStore");
+const { clampBalance, MAX_BALANCE } = require("./economy");
 
 const USERS_PATH = path.join(__dirname, "../../data/users.json");
 
@@ -13,34 +14,55 @@ function ensureObject(parent, key, fallback = {}) {
     return parent[key];
 }
 
-function ensureNumber(parent, key, fallback = 0) {
+function ensureNumber(parent, key, fallback = 0, options = {}) {
+    const min = options.min ?? 0;
+    const max = options.max ?? MAX_BALANCE;
     const value = Number(parent[key]);
-    parent[key] = Number.isFinite(value) ? value : fallback;
+    const normalized = Number.isFinite(value) ? Math.floor(value) : fallback;
+    parent[key] = Math.max(min, Math.min(max, normalized));
 }
 
 function ensureArray(parent, key) {
     if (!Array.isArray(parent[key])) parent[key] = [];
 }
 
+function normalizeInventory(inventory) {
+    if (!isPlainObject(inventory)) return {};
+
+    for (const key of Object.keys(inventory)) {
+        const qty = Math.floor(Number(inventory[key]));
+        if (!Number.isFinite(qty) || qty <= 0) {
+            delete inventory[key];
+        } else {
+            inventory[key] = Math.min(qty, MAX_BALANCE);
+        }
+    }
+
+    return inventory;
+}
+
 function normalizeUser(input = {}) {
     const user = isPlainObject(input) ? input : {};
 
-    ensureNumber(user, "wallet", 0);
-    ensureNumber(user, "bank", 0);
+    user.wallet = clampBalance(user.wallet);
+    user.bank = clampBalance(user.bank);
     ensureNumber(user, "lastInterest", 0);
 
     const job = ensureObject(user, "job");
     if (!Object.prototype.hasOwnProperty.call(job, "name")) job.name = null;
-    ensureNumber(job, "level", 1);
+    ensureNumber(job, "level", 1, { min: 1 });
     ensureNumber(job, "lastPayday", 0);
     ensureNumber(job, "lastActive", Date.now());
     ensureNumber(job, "streak", 0);
     ensureNumber(job, "raise", 0);
+    ensureNumber(job, "applyCooldown", 0);
     if (!Object.prototype.hasOwnProperty.call(job, "pay")) job.pay = undefined;
+    else ensureNumber(job, "pay", 0);
 
     const fishing = ensureObject(user, "fishing");
     if (!fishing.rod) fishing.rod = "Basic Rod";
     ensureObject(fishing, "inventory");
+    fishing.inventory = normalizeInventory(fishing.inventory);
     ensureNumber(fishing, "upgrades", 0);
 
     const gathering = ensureObject(user, "gathering");
@@ -55,10 +77,11 @@ function normalizeUser(input = {}) {
     const cooldowns = ensureObject(user, "cooldowns");
     ensureNumber(cooldowns, "fish", 0);
 
-    ensureObject(user, "inventory");
+    user.inventory = normalizeInventory(ensureObject(user, "inventory"));
 
     const pets = ensureObject(user, "pets");
     ensureArray(pets, "owned");
+    pets.owned = [...new Set(pets.owned.filter(pet => typeof pet === "string" && pet.trim()))];
     if (!Object.prototype.hasOwnProperty.call(pets, "equipped")) pets.equipped = null;
 
     if (!Object.prototype.hasOwnProperty.call(user, "house")) user.house = null;
@@ -109,19 +132,21 @@ function ensureUser(userId) {
 
 function updateUser(userId, newData) {
     const users = loadUsers();
-    users[userId] = newData;
+    users[userId] = normalizeUser(newData);
     saveUsers(users);
 }
 
 function addMoney(userId, amount) {
+    const value = Math.max(0, Math.floor(Number(amount) || 0));
     const user = ensureUser(userId);
-    user.wallet += Number(amount) || 0;
+    user.wallet = clampBalance(user.wallet + value);
     updateUser(userId, user);
 }
 
 function removeMoney(userId, amount) {
+    const value = Math.max(0, Math.floor(Number(amount) || 0));
     const user = ensureUser(userId);
-    user.wallet = Math.max(0, user.wallet - (Number(amount) || 0));
+    user.wallet = clampBalance(user.wallet - value);
     updateUser(userId, user);
 }
 

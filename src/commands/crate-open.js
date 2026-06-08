@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { formatCoins } = require("../utils/economy");
 const crates = require("../../data/crates.json");
 
 module.exports = {
@@ -30,6 +31,10 @@ module.exports = {
         const crateName = interaction.options.getString("crate");
         const userId = interaction.user.id;
         const user = ensureUser(userId);
+
+        if (!crates[crateName]) {
+            return interaction.reply("❌ That crate does not exist.");
+        }
 
         if (!user.inventory[crateName] || user.inventory[crateName] <= 0)
             return interaction.reply("❌ You don't have that crate.");
@@ -108,6 +113,16 @@ module.exports = {
 
         updateUser(userId, user);
 
-        await interaction.reply(`🎉 You opened a **${crateName}**!\n${rewardMessage}`);
+        const embed = new EmbedBuilder()
+            .setTitle("🎉 Crate Opened")
+            .setColor("Gold")
+            .setDescription(`You opened a **${crateName}**.`)
+            .addFields(
+                { name: "Reward", value: rewardMessage },
+                { name: "Wallet", value: formatCoins(user.wallet), inline: true },
+                { name: "Crates Left", value: `${user.inventory[crateName] || 0}`, inline: true }
+            );
+
+        await interaction.reply({ embeds: [embed] });
     }
 };

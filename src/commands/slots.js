@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,13 +17,13 @@ module.exports = {
         const userId = i.user.id;
         const user = ensureUser(userId);
 
-        if (bet <= 0) {
+        if (!isValidEconomyAmount(bet)) {
             return i.reply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle("❌ Invalid Bet")
                         .setColor("Red")
-                        .setDescription("Your bet must be greater than **0**.")
+                        .setDescription("Your bet must be a positive whole number up to **1,000,000,000 coins**.")
                 ]
             });
         }
@@ -63,9 +64,10 @@ module.exports = {
             .setColor(winnings > 0 ? "Green" : "Red")
             .addFields(
                 { name: "Result", value: `**${a} | ${b} | ${c}**`, inline: false },
-                { name: "Bet", value: `${bet} coins`, inline: true },
-                { name: "Payout", value: `${winnings} coins`, inline: true },
-                { name: "New Balance", value: `${user.wallet} coins`, inline: false }
+                { name: "Bet", value: formatCoins(bet), inline: true },
+                { name: "Payout", value: formatCoins(winnings), inline: true },
+                { name: "Net Change", value: formatCoins(winnings - bet), inline: true },
+                { name: "New Balance", value: formatCoins(user.wallet), inline: false }
             )
             .setFooter({ text: "Feeling lucky? Try again!" });
 

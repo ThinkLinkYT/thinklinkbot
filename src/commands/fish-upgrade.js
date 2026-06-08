@@ -4,6 +4,7 @@ const {
 } = require("discord.js");
 
 const { ensureUser, updateUser } = require("../utils/database");
+const { formatCoins } = require("../utils/economy");
 const rods = require("../../data/rods.json");
 
 module.exports = {
@@ -16,7 +17,11 @@ module.exports = {
         const user = ensureUser(userId);
 
         const rodNames = Object.keys(rods);
-        const currentIndex = rodNames.indexOf(user.fishing.rod);
+        let currentIndex = rodNames.indexOf(user.fishing.rod);
+        if (currentIndex === -1) {
+            user.fishing.rod = rodNames[0] || "Basic Rod";
+            currentIndex = 0;
+        }
 
         if (currentIndex === rodNames.length - 1)
             return interaction.reply("Your rod is already max level.");
@@ -37,8 +42,13 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setTitle("🎣 Rod Upgraded!")
-            .setDescription(`You upgraded to **${nextRod}**!\nMultiplier: **${rods[nextRod].multiplier}x**`)
-            .setColor("Green");
+            .setDescription(`You upgraded to **${nextRod}**.`)
+            .setColor("Green")
+            .addFields(
+                { name: "Cost", value: formatCoins(price), inline: true },
+                { name: "Multiplier", value: `${rods[nextRod].multiplier}x`, inline: true },
+                { name: "Wallet", value: formatCoins(user.wallet), inline: true }
+            );
 
         await interaction.reply({ embeds: [embed] });
     }

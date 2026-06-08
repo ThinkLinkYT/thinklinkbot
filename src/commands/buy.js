@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { formatCoins } = require("../utils/economy");
 const crates = require("../../data/crates.json");
 
 module.exports = {
@@ -40,6 +41,16 @@ module.exports = {
 
         updateUser(userId, user);
 
-        return interaction.reply(`📦 You bought a **${crateName}** for **${crate.price} coins**!`);
+        const embed = new EmbedBuilder()
+            .setTitle("📦 Crate Purchased")
+            .setColor("Green")
+            .setDescription(`You bought a **${crateName}**.`)
+            .addFields(
+                { name: "Price", value: formatCoins(crate.price), inline: true },
+                { name: "Wallet", value: formatCoins(user.wallet), inline: true },
+                { name: "Owned", value: `${user.inventory[crateName]}`, inline: true }
+            );
+
+        return interaction.reply({ embeds: [embed] });
     }
 };

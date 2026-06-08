@@ -51,7 +51,7 @@ module.exports = {
                 .setTitle("❌ Already Employed")
                 .setColor("Red")
                 .setDescription(
-                    `You already have a job as a **${user.job.name}**.\nUse **/jobquit** before applying for a new one.`
+                    `You already have a job as a **${user.job.name}**.\nUse **/job-quit** before applying for a new one.`
                 );
 
             return interaction.reply({ embeds: [embed] });

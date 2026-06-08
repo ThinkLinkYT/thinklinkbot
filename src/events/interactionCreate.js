@@ -1,6 +1,10 @@
+const { installInteractionPanelReplies } = require("../utils/panels");
+
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
+    installInteractionPanelReplies(interaction);
+
     async function replyWithError(error) {
       console.error("Interaction error:", error);
 

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,11 +18,11 @@ module.exports = {
         const user = ensureUser(userId);
 
         // ❌ Invalid amount
-        if (amount <= 0) {
+        if (!isValidEconomyAmount(amount)) {
             const embed = new EmbedBuilder()
                 .setTitle("❌ Invalid Amount")
                 .setColor("Red")
-                .setDescription("The withdrawal amount must be **greater than 0**.");
+                .setDescription("The withdrawal amount must be a positive whole number up to **1,000,000,000 coins**.");
 
             return interaction.reply({ embeds: [embed] });
         }
@@ -46,9 +47,9 @@ module.exports = {
             .setTitle("🏦 Withdrawal Successful")
             .setColor("Green")
             .addFields(
-                { name: "Amount Withdrawn", value: `${amount} coins`, inline: true },
-                { name: "New Wallet Balance", value: `${user.wallet} coins`, inline: true },
-                { name: "New Bank Balance", value: `${user.bank} coins`, inline: true }
+                { name: "Amount Withdrawn", value: formatCoins(amount), inline: true },
+                { name: "New Wallet Balance", value: formatCoins(user.wallet), inline: true },
+                { name: "New Bank Balance", value: formatCoins(user.bank), inline: true }
             );
 
         return interaction.reply({ embeds: [embed] });

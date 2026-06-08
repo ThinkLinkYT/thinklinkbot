@@ -63,7 +63,7 @@ module.exports = {
                 {
                     name: "💼 Jobs",
                     value:
-                    "**/job-apply** — Apply for a job (30m cooldown if failed)\n" +
+                    "**/jobapply** — Apply for a job (30m cooldown if failed)\n" +
                     "**/job-info** — View your current job\n" +
                     "**/job-list** — View all available jobs\n" +
                     "**/job-quit** — Quit your job (30m cooldown before reapplying)\n" +
@@ -73,6 +73,7 @@ module.exports = {
                 {
                     name: "🐾 Pets",
                     value:
+                    "**/pet-shop** — View available pets\n" +
                     "**/pet-buy** — Buy a pet\n" +
                     "**/pet-rename** — Rename your pet\n" +
                     "**/pet-sell** — Sell a pet\n" +

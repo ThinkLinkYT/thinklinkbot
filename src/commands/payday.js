@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
 const jobs = require("../../data/jobs.json");
 const { getTierBonus } = require("../utils/houseBonus");
+const { formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -68,7 +69,7 @@ module.exports = {
                         .setColor("Yellow")
                         .setDescription(`You can claim your next paycheck in **${hours}h ${minutes}m**.`)
                         .addFields(
-                            { name: "House Cooldown Reduction", value: `${cooldownReduction * 100}%`, inline: true },
+                            { name: "House Cooldown Reduction", value: `${Math.round(cooldownReduction * 100)}%`, inline: true },
                             { name: "Final Cooldown", value: `${(finalCooldown / (1000 * 60 * 60)).toFixed(2)} hours`, inline: true }
                         )
                 ],
@@ -111,12 +112,12 @@ module.exports = {
             .setColor("Green")
             .addFields(
                 { name: "Job", value: user.job.name, inline: true },
-                { name: "Base Pay", value: `${basePay} coins`, inline: true },
-                { name: "House Bonus", value: `+${houseDaily} coins`, inline: true },
+                { name: "Base Pay", value: formatCoins(basePay), inline: true },
+                { name: "House Bonus", value: `+${formatCoins(houseDaily)}`, inline: true },
                 { name: "Streak", value: `${user.job.streak} days`, inline: true },
-                { name: "Total Raise", value: `+${user.job.raise} coins`, inline: true },
-                { name: "New Balance", value: `${user.wallet} coins`, inline: false },
-                { name: "Cooldown Reduction", value: `${cooldownReduction * 100}%`, inline: true },
+                { name: "Total Raise", value: `+${formatCoins(user.job.raise)}`, inline: true },
+                { name: "New Balance", value: formatCoins(user.wallet), inline: false },
+                { name: "Cooldown Reduction", value: `${Math.round(cooldownReduction * 100)}%`, inline: true },
                 { name: "Next Payday Cooldown", value: `${(finalCooldown / (1000 * 60 * 60)).toFixed(2)} hours`, inline: true }
             );
 

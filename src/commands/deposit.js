@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,13 +18,13 @@ module.exports = {
         const userId = interaction.user.id;
         const user = ensureUser(userId);
 
-        if (amount <= 0) {
+        if (!isValidEconomyAmount(amount)) {
             return interaction.reply({
                 embeds: [
                     new EmbedBuilder()
                         .setTitle("❌ Invalid Amount")
                         .setColor("Red")
-                        .setDescription("The amount must be greater than **0**.")
+                        .setDescription("The amount must be a positive whole number up to **1,000,000,000 coins**.")
                 ],
                 ephemeral: true
             });
@@ -49,9 +50,9 @@ module.exports = {
             .setTitle("🏦 Deposit Successful")
             .setColor("Green")
             .addFields(
-                { name: "Deposited", value: `${amount}`, inline: true },
-                { name: "New Wallet Balance", value: `${user.wallet}`, inline: true },
-                { name: "New Bank Balance", value: `${user.bank}`, inline: true }
+                { name: "Deposited", value: formatCoins(amount), inline: true },
+                { name: "New Wallet Balance", value: formatCoins(user.wallet), inline: true },
+                { name: "New Bank Balance", value: formatCoins(user.bank), inline: true }
             )
             .setFooter({ text: "Thanks for banking with us!" });
 

@@ -4,6 +4,24 @@ const {
 
 const { ensureUser, updateUser } = require("../utils/database");
 const { loadGames, saveGames, drawCard, handValue } = require("../utils/blackjack");
+const { formatCoins } = require("../utils/economy");
+
+function completeGame(games, userId) {
+    delete games[userId];
+    saveGames(games);
+}
+
+function applyBlackjackPayout(user, game, payout) {
+    const bet = Number(game.bet) || 0;
+    if (game.stakeReserved) {
+        user.wallet += payout;
+        return payout - bet;
+    }
+
+    const legacyChange = payout - bet;
+    user.wallet += legacyChange;
+    return legacyChange;
+}
 
 module.exports = {
     id: "bj_",
@@ -29,19 +47,19 @@ module.exports = {
 
             // Player busts
             if (playerVal > 21) {
-                const loss = game.bet; // lose bet amount
-                user.wallet -= loss;
+                const moneyChange = applyBlackjackPayout(user, game, 0);
                 updateUser(userId, user);
 
                 game.finished = true;
-                saveGames(games);
+                completeGame(games, userId);
 
                 const embed = new EmbedBuilder()
                     .setTitle("🃏 Blackjack — You Busted!")
                     .addFields(
                         { name: "Your Hand", value: `${game.player.join(" ")} = ${playerVal}` },
                         { name: "Dealer Hand", value: `${game.dealer.join(" ")} = ${handValue(game.dealer)}` },
-                        { name: "Balance Change", value: `🔴 **-${loss} coins**` }
+                        { name: "Net Change", value: `🔴 **${formatCoins(moneyChange)}**` },
+                        { name: "Wallet", value: formatCoins(user.wallet) }
                     )
                     .setColor("Red");
 
@@ -78,6 +96,7 @@ module.exports = {
 
             let result = "";
             let moneyChange = 0;
+            let payout = 0;
 
             // Check for perfect pair (Ace + Jack)
             const perfectPair =
@@ -86,34 +105,33 @@ module.exports = {
 
             if (perfectPair) {
                 result = "PERFECT PAIR! Triple Win!";
-                moneyChange = game.bet * 3;
-                user.wallet += moneyChange;
+                payout = game.bet * 3;
             }
 
             // Normal win
             else if (dealerVal > 21 || playerVal > dealerVal) {
                 result = "You win!";
-                moneyChange = game.bet * 2; // double payout
-                user.wallet += moneyChange;
+                payout = game.bet * 2;
             }
 
             // Loss
             else if (playerVal < dealerVal) {
                 result = "Dealer wins!";
-                moneyChange = -game.bet; // lose bet
-                user.wallet -= game.bet;
+                payout = 0;
             }
 
             // Tie
             else {
                 result = "It's a tie!";
-                moneyChange = 0;
+                payout = game.bet;
             }
+
+            moneyChange = applyBlackjackPayout(user, game, payout);
 
             updateUser(userId, user);
 
             game.finished = true;
-            saveGames(games);
+            completeGame(games, userId);
 
             const embed = new EmbedBuilder()
                 .setTitle(`🃏 Blackjack — ${result}`)
@@ -121,14 +139,19 @@ module.exports = {
                     { name: "Your Hand", value: `${game.player.join(" ")} = ${playerVal}` },
                     { name: "Dealer Hand", value: `${game.dealer.join(" ")} = ${dealerVal}` },
                     {
-                        name: "Balance Change",
+                        name: "Payout",
+                        value: formatCoins(payout)
+                    },
+                    {
+                        name: "Net Change",
                         value:
                             moneyChange > 0
-                                ? `🟢 **+${moneyChange} coins**`
+                                ? `🟢 **+${formatCoins(moneyChange)}**`
                                 : moneyChange < 0
-                                ? `🔴 **${moneyChange} coins**`
-                                : `⚪ **0 coins**`
-                    }
+                                ? `🔴 **-${formatCoins(Math.abs(moneyChange))}**`
+                                : `⚪ **${formatCoins(0)}**`
+                    },
+                    { name: "Wallet", value: formatCoins(user.wallet) }
                 )
                 .setColor(
                     moneyChange > 0 ? "Green" :

@@ -8,6 +8,7 @@ const {
 
 const { ensureUser, updateUser } = require("../utils/database");
 const { loadGames, saveGames, drawCard, handValue } = require("../utils/blackjack");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,19 +25,28 @@ module.exports = {
         const userId = i.user.id;
         const user = ensureUser(userId);
 
-        if (bet <= 0) return i.reply("Bet must be positive.");
+        if (!isValidEconomyAmount(bet)) {
+            return i.reply("Bet must be a positive whole number up to 1,000,000,000 coins.");
+        }
         if (user.wallet < bet) return i.reply("You don't have enough money.");
 
         const games = loadGames();
+        if (games[userId] && !games[userId].finished) {
+            return i.reply("You already have an active blackjack game. Finish it before starting another one.");
+        }
 
         const player = [drawCard(), drawCard()];
         const dealer = [drawCard(), drawCard()];
+
+        user.wallet -= bet;
+        updateUser(userId, user);
 
         games[userId] = {
             bet,
             player,
             dealer,
-            finished: false
+            finished: false,
+            stakeReserved: true
         };
 
         saveGames(games);
@@ -45,7 +55,9 @@ module.exports = {
             .setTitle("🃏 Blackjack")
             .addFields(
                 { name: "Your Hand", value: `${player.join(" ")} = ${handValue(player)}` },
-                { name: "Dealer Shows", value: `${dealer[0]} ❓` }
+                { name: "Dealer Shows", value: `${dealer[0]} ❓` },
+                { name: "Bet Reserved", value: formatCoins(bet), inline: true },
+                { name: "Wallet", value: formatCoins(user.wallet), inline: true }
             )
             .setColor("DarkGreen");
 

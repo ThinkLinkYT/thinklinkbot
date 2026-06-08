@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -33,15 +34,24 @@ module.exports = {
             return interaction.reply({ embeds: [embed] });
         }
 
+        if (target.bot) {
+            const embed = new EmbedBuilder()
+                .setTitle("❌ Invalid Recipient")
+                .setColor("Red")
+                .setDescription("You cannot send economy coins to a bot account.");
+
+            return interaction.reply({ embeds: [embed] });
+        }
+
         const giver = ensureUser(giverId);
         const receiver = ensureUser(receiverId);
 
         // Invalid amount
-        if (amount <= 0) {
+        if (!isValidEconomyAmount(amount)) {
             const embed = new EmbedBuilder()
                 .setTitle("❌ Invalid Amount")
                 .setColor("Red")
-                .setDescription("Amount must be greater than 0.");
+                .setDescription("Amount must be a positive whole number up to **1,000,000,000 coins**.");
 
             return interaction.reply({ embeds: [embed] });
         }
@@ -69,6 +79,10 @@ module.exports = {
             .setDescription(
                 `You gave **${amount} coins** to **${target.username}**.`
             );
+        embed.addFields(
+            { name: "Your Wallet", value: formatCoins(giver.wallet), inline: true },
+            { name: "Recipient Wallet", value: formatCoins(receiver.wallet), inline: true }
+        );
 
         return interaction.reply({ embeds: [embed] });
     }

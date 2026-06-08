@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { ensureUser, updateUser } = require("../utils/database");
+const { isValidEconomyAmount, formatCoins } = require("../utils/economy");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,8 +27,8 @@ module.exports = {
         const userId = i.user.id;
         const user = ensureUser(userId);
 
-        if (bet <= 0)
-            return i.reply("Bet must be positive.");
+        if (!isValidEconomyAmount(bet))
+            return i.reply("Bet must be a positive whole number up to 1,000,000,000 coins.");
 
         if (user.wallet < bet)
             return i.reply("You don't have enough money.");
@@ -40,10 +41,10 @@ module.exports = {
 
         if (result === choice) {
             won = true;
-            amountWon = bet * 2; // win double
+            amountWon = bet;
             user.wallet += amountWon;
         } else {
-            amountLost = bet; // lose what you bet
+            amountLost = bet;
             user.wallet -= amountLost;
         }
 
@@ -56,9 +57,9 @@ module.exports = {
                 { name: "Your Choice", value: choice, inline: true },
                 { name: "Result", value: result, inline: true },
                 won
-                    ? { name: "You Won", value: `+${amountWon} credits`, inline: false }
-                    : { name: "You Lost", value: `-${amountLost} credits`, inline: false },
-                { name: "New Balance", value: `${user.wallet} credits`, inline: false }
+                    ? { name: "Net Change", value: `+${formatCoins(amountWon)}`, inline: false }
+                    : { name: "Net Change", value: `-${formatCoins(amountLost)}`, inline: false },
+                { name: "New Balance", value: formatCoins(user.wallet), inline: false }
             );
 
         return i.reply({ embeds: [embed] });
