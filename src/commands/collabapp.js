@@ -5,6 +5,7 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require("discord.js");
+const { getTicketOpenerMention, isTicketChannel } = require("../utils/tickets");
 
 const collabQuestions = [
   "What is your Youtube name and @?",
@@ -15,20 +16,14 @@ const collabQuestions = [
 ];
 
 async function startApplication(i, title, questions, color, prefix) {
-  if (!i.channel.isThread()) {
+  if (!isTicketChannel(i.channel)) {
     return i.reply({
-      content: "This command must be used inside a ticket thread.",
+      content: "This command must be used inside a ticket channel.",
       ephemeral: true
     });
   }
 
-  let mention = "Applicant";
-
-  try {
-    const members = await i.channel.members.fetch();
-    const opener = members.find(m => m.user && !m.user.bot);
-    if (opener) mention = `<@${opener.user.id}>`;
-  } catch {}
+  const mention = await getTicketOpenerMention(i.channel);
 
   const embed = new EmbedBuilder()
     .setTitle(title)
@@ -54,7 +49,7 @@ async function startApplication(i, title, questions, color, prefix) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("collabapp")
-    .setDescription("Send collaboration application panel in a collab ticket thread"),
+    .setDescription("Send collaboration application panel in a collab ticket channel"),
 
   async execute(i) {
     await startApplication(

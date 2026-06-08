@@ -1,4 +1,5 @@
 const { installInteractionPanelReplies } = require("../utils/panels");
+const { canManageTickets, isOwner } = require("../utils/staff");
 
 module.exports = {
   name: "interactionCreate",
@@ -30,18 +31,30 @@ module.exports = {
         "countingstart",
         "countingend",
         "ticketpanel",
-        "closeticket",
-        "timeclose",
-        "modapp",
-        "collabapp",
         "giveawaycreate",
         "accept",
         "deny"
       ];
+      const ticketStaffCommands = [
+        "closeticket",
+        "timeclose",
+        "modapp",
+        "collabapp"
+      ];
 
       if (
         ownerOnly.includes(interaction.commandName) &&
-        interaction.user.id !== process.env.OWNER_ID
+        !isOwner(interaction)
+      ) {
+        return interaction.reply({
+          content: "You are not authorized to use this command.",
+          ephemeral: true
+        });
+      }
+
+      if (
+        ticketStaffCommands.includes(interaction.commandName) &&
+        !canManageTickets(interaction)
       ) {
         return interaction.reply({
           content: "You are not authorized to use this command.",

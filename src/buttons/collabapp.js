@@ -1,15 +1,11 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { collabQuestions } = require("../commands/collabapp");
+const { getTicketOpenerMention } = require("../utils/tickets");
 
 async function navigateApplication(i, questions, title, color, prefix) {
   const idx = parseInt(i.customId.split("_")[2]);
   const newIdx = Math.max(0, Math.min(idx, questions.length - 1));
-  let mention = "Applicant";
-  try {
-    const members = await i.channel.members.fetch();
-    const opener = members.find(m => m.user && !m.user.bot);
-    if (opener) mention = `<@${opener.user.id}>`;
-  } catch {}
+  const mention = await getTicketOpenerMention(i.channel);
   const embed = new EmbedBuilder()
     .setTitle(title)
     .setDescription(`${mention}\n\n${questions[newIdx]}`)

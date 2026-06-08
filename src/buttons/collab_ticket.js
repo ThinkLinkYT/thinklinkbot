@@ -1,4 +1,4 @@
-const { createTicket } = require("../utils/tickets");
+const { MODERATOR_ROLE_ID, createTicket } = require("../utils/tickets");
 
 module.exports = {
   id: "collab_ticket",
@@ -7,7 +7,7 @@ module.exports = {
       i,
       "collab",
       "Collab Request Ticket",
-      "<@&1265101131353428049> will be able to help you soon!"
+      `<@&${MODERATOR_ROLE_ID}> will be able to help you soon!`
     );
   }
 };

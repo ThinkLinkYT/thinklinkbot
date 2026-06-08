@@ -1,8 +1,13 @@
-const { createTicket } = require("../utils/tickets");
+const { MODERATOR_ROLE_ID, createTicket } = require("../utils/tickets");
 
 module.exports = {
   id: "general_ticket",
   async execute(i) {
-    await createTicket(i, "general", "Support Ticket", "Support will be with you soon!");
+    await createTicket(
+      i,
+      "general",
+      "Support Ticket",
+      `<@&${MODERATOR_ROLE_ID}> will be with you soon!`
+    );
   }
 };
