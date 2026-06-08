@@ -1,0 +1,22 @@
+{
+    "Common Crate": {
+        "price": 100,
+        "rewards": ["Gold", "Oak", "Birch", "Coins"]
+    },
+    "Uncommon Crate": {
+        "price": 250,
+        "rewards": ["Gold", "Pine", "Diamond", "Coins"]
+    },
+    "Rare Crate": {
+        "price": 500,
+        "rewards": ["Diamond", "Epic Fish", "Gold", "Coins"]
+    },
+    "Epic Crate": {
+        "price": 1200,
+        "rewards": ["Epic Fish", "Pet Egg", "Diamond", "Coins"]
+    },
+    "Legendary Crate": {
+        "price": 3000,
+        "rewards": ["Pet Egg", "Diamond", "Epic Fish", "Gold"]
+    }
+}

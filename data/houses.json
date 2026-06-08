@@ -1,0 +1,61 @@
+{
+    "Small Apartment": {
+        "price": 1500,
+        "tierBonus": { "daily": 10, "cooldown": 0.02 },
+        "typeBonus": { "gather": "none", "amount": 0 }
+    },
+
+    "Studio Apartment": {
+        "price": 1800,
+        "tierBonus": { "daily": 10, "cooldown": 0.04 },
+        "typeBonus": { "gather": "none", "amount": 0 }
+    },
+
+    "Suburban House": {
+        "price": 7500,
+        "tierBonus": { "daily": 20, "cooldown": 0.06 },
+        "typeBonus": { "gather": "none", "amount": 0 }
+    },
+
+    "Farmhouse": {
+        "price": 18000,
+        "tierBonus": { "daily": 20, "cooldown": 0.8 },
+        "typeBonus": { "gather": "crops", "amount": 2 }
+    },
+
+    "Mountain Cabin": {
+        "price": 22000,
+        "tierBonus": { "daily": 40, "cooldown": 0.1 },
+        "typeBonus": { "gather": "wood", "amount": 2 }
+    },
+
+    "Beach House": {
+        "price": 25000,
+        "tierBonus": { "daily": 40, "cooldown": 0.12 },
+        "typeBonus": { "gather": "fish", "amount": 2 }
+    },
+
+    "Mineshaft Home": {
+        "price": 30000,
+        "tierBonus": { "daily": 40, "cooldown": 0.13 },
+        "typeBonus": { "gather": "ore", "amount": 2 }
+    },
+
+    "Villa": {
+        "price": 45000,
+        "tierBonus": { "daily": 40, "cooldown": 0.15 },
+        "typeBonus": { "gather": "none", "amount": 0 }
+    },
+
+    "Mansion": {
+        "price": 120000,
+        "tierBonus": { "daily": 75, "cooldown": 0.20 },
+        "typeBonus": { "gather": "all", "amount": 2 }
+    },
+
+    "Castle": {
+        "price": 500000,
+        "tierBonus": { "daily": 200, "cooldown": 0.25 },
+        "typeBonus": { "gather": "all", "amount": 3 }
+    }
+}

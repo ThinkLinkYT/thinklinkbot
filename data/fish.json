@@ -1,0 +1,27 @@
+{
+  "Common": [
+    { "name": "Minnow", "value": 5 },
+    { "name": "Bluegill", "value": 7 },
+    { "name": "Perch", "value": 10 }
+  ],
+  "Uncommon": [
+    { "name": "Bass", "value": 15 },
+    { "name": "Catfish", "value": 18 },
+    { "name": "Carp", "value": 20 }
+  ],
+  "Rare": [
+    { "name": "Salmon", "value": 35 },
+    { "name": "Pike", "value": 40 },
+    { "name": "Sturgeon", "value": 50 }
+  ],
+  "Legendary": [
+    { "name": "Golden Trout", "value": 100 },
+    { "name": "Ancient Koi", "value": 125 },
+    { "name": "Shadow Eel", "value": 150 }
+  ],
+  "Mythic": [
+    { "name": "Leviathan Spawn", "value": 300 },
+    { "name": "Storm Serpent", "value": 350 },
+    { "name": "Phoenixfish", "value": 400 }
+  ]
+}

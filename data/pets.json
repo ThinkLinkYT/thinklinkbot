@@ -1,0 +1,18 @@
+{
+  "Common": [
+    { "name": "Bunny", "price": 5000, "bonusType": "luck", "bonusValue": 3 },
+    { "name": "Cat", "price": 5500, "bonusType": "money", "bonusValue": 3 }
+  ],
+  "Uncommon": [
+    { "name": "Dog", "price": 7000, "bonusType": "luck", "bonusValue": 6 },
+    { "name": "Fox", "price": 7500, "bonusType": "failReduction", "bonusValue": 5 }
+  ],
+  "Rare": [
+    { "name": "Dragonling", "price": 10000, "bonusType": "luck", "bonusValue": 10 },
+    { "name": "Baby Griffin", "price": 12000, "bonusType": "money", "bonusValue": 10 }
+  ],
+  "Legendary": [
+    { "name": "Phoenix Hatchling", "price": 25000, "bonusType": "rarityBoost", "bonusValue": 15 },
+    { "name": "Shadow Wolf", "price": 100000, "bonusType": "luck", "bonusValue": 20 }
+  ]
+}

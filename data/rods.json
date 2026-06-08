@@ -1,0 +1,32 @@
+{
+  "Basic Rod": {
+    "price": 100,
+    "multiplier": 1.0,
+    "rarityBoost": 0,
+    "failReduction": 0
+  },
+  "Good Rod": {
+    "price": 300,
+    "multiplier": 1.2,
+    "rarityBoost": 2,
+    "failReduction": 5
+  },
+  "Great Rod": {
+    "price": 900,
+    "multiplier": 1.5,
+    "rarityBoost": 5,
+    "failReduction": 10
+  },
+  "Ultra Rod": {
+    "price": 2700,
+    "multiplier": 2.0,
+    "rarityBoost": 10,
+    "failReduction": 15
+  },
+  "Master Rod": {
+    "price": 8100,
+    "multiplier": 3.0,
+    "rarityBoost": 20,
+    "failReduction": 25
+  }
+}

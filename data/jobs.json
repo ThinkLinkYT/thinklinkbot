@@ -1,0 +1,8 @@
+{
+    "Fisher": { "min": 100, "max": 300 },
+    "Miner": { "min": 150, "max": 350 },
+    "Farmer": { "min": 120, "max": 320 },
+    "Cashier": { "min": 100, "max": 250 },
+    "Programmer": { "min": 300, "max": 700 },
+    "Delivery Driver": { "min": 200, "max": 450 }
+}
