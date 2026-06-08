@@ -17,6 +17,7 @@ data/shop.json
 data/underageTimeouts.json
 data/users.json
 data/warnings.json
+data/wrappedHistory.json
 data/wrappedStats.json
 data/*.corrupt-*
 data/*.tmp
