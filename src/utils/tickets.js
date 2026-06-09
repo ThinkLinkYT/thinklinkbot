@@ -7,6 +7,7 @@ const { getUserStats, saveWrappedStats } = require("./wrapped");
 const { MODERATOR_ROLE_ID } = require("./staff");
 
 const TICKET_TOPIC_PREFIX = "thinklink-ticket";
+const TICKET_CATEGORY_ID = process.env.TICKET_CATEGORY_ID || "1513949501117960243";
 
 function sanitizeChannelPart(value, fallback = "ticket", maxLength = 50) {
   const safeName = String(value || fallback)
@@ -75,6 +76,17 @@ async function createTicket(interaction, type, title, description) {
   if (!interaction.guild) {
     return interaction.reply({
       content: "Tickets can only be created inside the server.",
+      ephemeral: true
+    });
+  }
+
+  const ticketCategory = await interaction.guild.channels
+    .fetch(TICKET_CATEGORY_ID)
+    .catch(() => null);
+
+  if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
+    return interaction.reply({
+      content: "I could not find the ticket category. Please check the ticket category ID.",
       ephemeral: true
     });
   }
@@ -155,7 +167,7 @@ async function createTicket(interaction, type, title, description) {
     channel = await interaction.guild.channels.create({
       name: buildTicketChannelName(type, interaction.user.username),
       type: ChannelType.GuildText,
-      parent: interaction.channel?.parentId || undefined,
+      parent: TICKET_CATEGORY_ID,
       topic: buildTicketTopic(openerId, type),
       permissionOverwrites
     });
