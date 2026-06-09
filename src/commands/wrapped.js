@@ -3,7 +3,8 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  MessageFlags
 } = require("discord.js");
 const crypto = require("crypto");
 const https = require("https");
@@ -410,12 +411,12 @@ module.exports = {
     .setDescription("Open your ThinkLink Wrapped stats page"),
 
   async execute(i) {
-    await i.deferReply({ ephemeral: true });
+    await i.deferReply({ flags: MessageFlags.Ephemeral });
 
     const stats = getUserStats(i.user.id);
     const economy = buildEconomySnapshot(ensureUser(i.user.id));
     const payload = buildWrappedPayload(i, stats, economy);
-    saveWrappedStats({ immediate: true, includeHistory: true });
+    saveWrappedStats();
     const { url, mode, error } = await buildWrappedUrl(payload);
 
     const embed = new EmbedBuilder()

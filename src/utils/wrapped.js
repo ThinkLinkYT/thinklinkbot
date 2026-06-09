@@ -7,6 +7,7 @@ const HISTORY_FILE = "wrappedHistory.json";
 const HISTORY_DAYS = 400;
 const SAVE_DEBOUNCE_MS = 30 * 1000;
 const HISTORY_SAVE_INTERVAL_MS = 60 * 60 * 1000;
+const SAVE_FAILURE_PAUSE_MS = 5 * 60 * 1000;
 const NUMBER_STATS = [
   "countingPoints",
   "tickets",
@@ -23,6 +24,7 @@ const NUMBER_STATS = [
 const MAP_STATS = ["topChannel", "topEmoji", "topMentions"];
 let saveTimer = null;
 let lastHistorySaveAt = 0;
+let savesPausedUntil = 0;
 
 function createEmptyStats() {
   const now = new Date();
@@ -102,12 +104,31 @@ function shouldSaveHistory() {
   return Date.now() - lastHistorySaveAt >= HISTORY_SAVE_INTERVAL_MS;
 }
 
+function areSavesPaused() {
+  return Date.now() < savesPausedUntil;
+}
+
+function handleSaveFailure(err) {
+  if (err?.code === "ENOSPC") {
+    savesPausedUntil = Date.now() + SAVE_FAILURE_PAUSE_MS;
+    console.error(
+      "Wrapped stats saves paused for 5 minutes because the host reported no writable disk space. " +
+        "Delete old data/*.tmp files and free space in the Pella file manager."
+    );
+    return;
+  }
+
+  console.error("Failed to save Wrapped stats:", err);
+}
+
 function flushWrappedStats(options = {}) {
   const includeHistory = options.includeHistory === true;
   if (saveTimer) {
     clearTimeout(saveTimer);
     saveTimer = null;
   }
+
+  if (areSavesPaused()) return false;
 
   try {
     if (includeHistory) {
@@ -119,7 +140,7 @@ function flushWrappedStats(options = {}) {
       lastHistorySaveAt = Date.now();
     }
   } catch (err) {
-    console.error("Failed to save Wrapped stats:", err);
+    handleSaveFailure(err);
     return false;
   }
 
@@ -129,6 +150,8 @@ function flushWrappedStats(options = {}) {
 function saveWrappedStats(options = {}) {
   const immediate = options.immediate === true;
   const includeHistory = options.includeHistory === true || shouldSaveHistory();
+
+  if (areSavesPaused()) return false;
 
   if (immediate) {
     return flushWrappedStats({ includeHistory });
@@ -140,6 +163,7 @@ function saveWrappedStats(options = {}) {
     saveTimer = null;
     flushWrappedStats({ includeHistory: shouldSaveHistory() });
   }, SAVE_DEBOUNCE_MS);
+  if (typeof saveTimer.unref === "function") saveTimer.unref();
 
   return true;
 }
