@@ -5,6 +5,8 @@ const wrappedHistory = new Map();
 const vcJoins = new Map();
 const HISTORY_FILE = "wrappedHistory.json";
 const HISTORY_DAYS = 400;
+const SAVE_DEBOUNCE_MS = 30 * 1000;
+const HISTORY_SAVE_INTERVAL_MS = 60 * 60 * 1000;
 const NUMBER_STATS = [
   "countingPoints",
   "tickets",
@@ -19,6 +21,8 @@ const NUMBER_STATS = [
   "modDenied"
 ];
 const MAP_STATS = ["topChannel", "topEmoji", "topMentions"];
+let saveTimer = null;
+let lastHistorySaveAt = 0;
 
 function createEmptyStats() {
   const now = new Date();
@@ -94,10 +98,50 @@ function loadWrappedStats() {
   );
 }
 
-function saveWrappedStats() {
-  updateWrappedHistoryForAll();
-  saveMapToFile("wrappedStats.json", wrappedStats, s => s);
-  saveMapToFile(HISTORY_FILE, wrappedHistory, history => history);
+function shouldSaveHistory() {
+  return Date.now() - lastHistorySaveAt >= HISTORY_SAVE_INTERVAL_MS;
+}
+
+function flushWrappedStats(options = {}) {
+  const includeHistory = options.includeHistory === true;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  try {
+    if (includeHistory) {
+      updateWrappedHistoryForAll();
+    }
+    saveMapToFile("wrappedStats.json", wrappedStats, s => s);
+    if (includeHistory) {
+      saveMapToFile(HISTORY_FILE, wrappedHistory, history => history);
+      lastHistorySaveAt = Date.now();
+    }
+  } catch (err) {
+    console.error("Failed to save Wrapped stats:", err);
+    return false;
+  }
+
+  return true;
+}
+
+function saveWrappedStats(options = {}) {
+  const immediate = options.immediate === true;
+  const includeHistory = options.includeHistory === true || shouldSaveHistory();
+
+  if (immediate) {
+    return flushWrappedStats({ includeHistory });
+  }
+
+  if (saveTimer) return true;
+
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    flushWrappedStats({ includeHistory: shouldSaveHistory() });
+  }, SAVE_DEBOUNCE_MS);
+
+  return true;
 }
 
 function formatVcTime(ms) {
@@ -256,6 +300,7 @@ module.exports = {
   normalizeStats,
   loadWrappedStats,
   saveWrappedStats,
+  flushWrappedStats,
   formatVcTime,
   getTopEntries,
   buildRangeStats,

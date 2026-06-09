@@ -415,7 +415,7 @@ module.exports = {
     const stats = getUserStats(i.user.id);
     const economy = buildEconomySnapshot(ensureUser(i.user.id));
     const payload = buildWrappedPayload(i, stats, economy);
-    saveWrappedStats();
+    saveWrappedStats({ immediate: true, includeHistory: true });
     const { url, mode, error } = await buildWrappedUrl(payload);
 
     const embed = new EmbedBuilder()
