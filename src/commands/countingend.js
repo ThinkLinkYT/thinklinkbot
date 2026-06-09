@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { countingSessions, saveSessions } = require("../utils/counting");
+const { endSession } = require("../utils/counting");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,8 +7,7 @@ module.exports = {
     .setDescription("End the counting game in this channel"),
 
   async execute(i) {
-    countingSessions.delete(i.channelId);
-    saveSessions();
+    endSession(i.channelId);
 
     await i.reply("Counting game ended in this channel.");
   }

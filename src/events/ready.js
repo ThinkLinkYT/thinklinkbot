@@ -2,7 +2,12 @@ const { REST, Routes, Events } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 
-const { loadLeaderboard, loadSessions } = require("../utils/counting");
+const {
+  ensureCountingSession,
+  getCountingChannelId,
+  loadLeaderboard,
+  loadSessions
+} = require("../utils/counting");
 const { loadGiveaways } = require("../utils/giveaways");
 const { loadWrappedStats } = require("../utils/wrapped");
 const { checkWeeklyReset } = require("../utils/questUtils");
@@ -56,6 +61,15 @@ module.exports = {
     // Load persisted data
     loadLeaderboard();
     loadSessions();
+    const countingChannelId = getCountingChannelId();
+    const countingSession = ensureCountingSession(countingChannelId);
+    if (countingSession.enabled === false) {
+      console.log(`Counting is disabled in channel ${countingChannelId}.`);
+    } else {
+      console.log(
+        `Counting restored in channel ${countingChannelId}: next number ${countingSession.currentNumber}, lives ${countingSession.lives}.`
+      );
+    }
     loadGiveaways(client);
     loadWrappedStats();
     checkWeeklyReset();

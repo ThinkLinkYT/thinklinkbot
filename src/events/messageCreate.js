@@ -1,4 +1,13 @@
-const { countingSessions, countingLeaderboard, saveSessions, saveLeaderboard, resetSession } = require("../utils/counting");
+const {
+  countingSessions,
+  countingLeaderboard,
+  ensureCountingSession,
+  getCountingChannelId,
+  isSessionActive,
+  saveSessions,
+  saveLeaderboard,
+  resetSession
+} = require("../utils/counting");
 const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 const { cacheMessageForAudit } = require("../utils/messageAudit");
 const crypto = require("crypto");
@@ -191,9 +200,11 @@ module.exports = {
 
     saveWrappedStats();
 
+    const countingChannelId = getCountingChannelId();
+
     // Enforce numeric-only in counting channel
     if (
-      msg.channelId === "1400925112592633886" &&
+      msg.channelId === countingChannelId &&
       !/^[-+]?\d+$/.test(msg.content.trim())
     ) {
       try {
@@ -204,8 +215,11 @@ module.exports = {
       return;
     }
 
-    const session = countingSessions.get(msg.channelId);
-    if (!session) return;
+    const session =
+      msg.channelId === countingChannelId
+        ? ensureCountingSession(msg.channelId)
+        : countingSessions.get(msg.channelId);
+    if (!isSessionActive(session)) return;
 
     const num = parseInt(msg.content.trim(), 10);
     if (isNaN(num)) return;
