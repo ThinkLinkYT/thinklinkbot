@@ -9,7 +9,6 @@ const {
   loadSessions
 } = require("../utils/counting");
 const { loadGiveaways } = require("../utils/giveaways");
-const { loadWrappedStats } = require("../utils/wrapped");
 const { checkWeeklyReset } = require("../utils/questUtils");
 const { startUnderageTimeoutMonitor } = require("../utils/underageTimeouts");
 
@@ -71,7 +70,6 @@ module.exports = {
       );
     }
     loadGiveaways(client);
-    loadWrappedStats();
     checkWeeklyReset();
     setInterval(checkWeeklyReset, 60 * 60 * 1000);
     startUnderageTimeoutMonitor(client);

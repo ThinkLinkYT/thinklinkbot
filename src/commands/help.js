@@ -85,7 +85,6 @@ module.exports = {
                 {
                     name: "📜 Miscellaneous",
                     value:
-                    "**/wrapped** — View your Discord Wrapped\n" +
                     "**/rules** — View the server rules\n" +
                     "**/quests** — View weekly quests\n" +
                     "**/quest-progress** — View your quest progress\n" +

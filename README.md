@@ -42,5 +42,5 @@ Optional variable:
 ## Security Notes
 
 - Never commit `.env` or bot tokens.
-- Runtime data files such as `data/users.json`, `data/warnings.json`, and `data/wrappedStats.json` are ignored so user/server history does not get published.
+- Runtime data files such as `data/users.json` and `data/warnings.json` are ignored so user/server history does not get published.
 - Static catalog files such as pets, jobs, rods, houses, fish, and crates are safe to keep in GitHub.

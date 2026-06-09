@@ -96,13 +96,8 @@ module.exports = {
       const id = interaction.customId;
       let btn = null;
 
-      // Wrapped pagination
-      if (id.startsWith("wrapped_")) {
-        btn = client.buttons.get("wrapped_pager");
-      }
-
       // ⭐ FIXED: Leaderboard pagination
-      else if (id.startsWith("leaderboard_")) {
+      if (id.startsWith("leaderboard_")) {
         btn = client.buttons.get("leaderboard_pager");
       }
 

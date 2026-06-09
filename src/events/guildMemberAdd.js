@@ -1,4 +1,3 @@
-const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 const { sendMemberEmbed } = require("../utils/audit");
 const { applyUnderageTimeout } = require("../utils/underageTimeouts");
 
@@ -11,12 +10,6 @@ function formatMemberNumber(count) {
 module.exports = {
   name: "guildMemberAdd",
   async execute(member, client) {
-    const stats = getUserStats(member.id);
-    if (!stats.joined) {
-      stats.joined = new Date().toISOString();
-      saveWrappedStats();
-    }
-
     const avatar = member.user.displayAvatarURL({ size: 256 });
     const createdTimestamp = Math.floor(member.user.createdTimestamp / 1000);
     const joinedTimestamp = Math.floor(Date.now() / 1000);

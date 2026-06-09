@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,10 +19,6 @@ module.exports = {
         ephemeral: true
       });
     }
-
-    const stats = getUserStats(user.id);
-    stats.collabDenied = (stats.collabDenied || 0) + 1;
-    saveWrappedStats();
 
     const embed = new EmbedBuilder()
       .setTitle("❌ Collab Request Denied")

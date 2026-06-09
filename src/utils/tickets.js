@@ -3,7 +3,6 @@ const {
   EmbedBuilder,
   PermissionFlagsBits
 } = require("discord.js");
-const { getUserStats, saveWrappedStats } = require("./wrapped");
 const { MODERATOR_ROLE_ID } = require("./staff");
 
 const TICKET_TOPIC_PREFIX = "thinklink-ticket";
@@ -178,10 +177,6 @@ async function createTicket(interaction, type, title, description) {
       ephemeral: true
     });
   }
-
-  const stats = getUserStats(interaction.user.id);
-  stats.tickets = (stats.tickets || 0) + 1;
-  saveWrappedStats();
 
   const embed = new EmbedBuilder()
     .setTitle(title)

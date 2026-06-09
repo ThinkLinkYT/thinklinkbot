@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,11 +26,6 @@ module.exports = {
 
       // Add collab role
       await member.roles.add("1445051565407998053");
-
-      // Update wrapped stats
-      const stats = getUserStats(user.id);
-      stats.collabAccepted = (stats.collabAccepted || 0) + 1;
-      saveWrappedStats();
 
       // Build embed
       const embed = new EmbedBuilder()

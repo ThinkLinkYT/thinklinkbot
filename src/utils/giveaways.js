@@ -1,5 +1,4 @@
 const { loadMapFromFile, saveMapToFile } = require("./persistence");
-const { getUserStats, saveWrappedStats } = require("./wrapped");
 
 const giveaways = new Map();
 const MAX_TIMEOUT_MS = 2_147_483_647;
@@ -26,12 +25,6 @@ function scheduleGiveawayResolution(client, messageId, g) {
 
     const entrants = Array.from(giveaway.entrants);
     const winners = pickWinners(entrants, giveaway.winnersCount);
-
-    for (const winnerId of winners) {
-      const stats = getUserStats(winnerId);
-      stats.giveawaysWon = (stats.giveawaysWon || 0) + 1;
-    }
-    saveWrappedStats();
 
     try {
       const channel = await client.channels.fetch(giveaway.channelId);

@@ -8,7 +8,6 @@ const {
   saveLeaderboard,
   resetSession
 } = require("../utils/counting");
-const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 const { cacheMessageForAudit } = require("../utils/messageAudit");
 const crypto = require("crypto");
 
@@ -182,24 +181,6 @@ module.exports = {
     // ============================================================
 
 
-    // Wrapped stats tracking
-    const stats = getUserStats(msg.author.id);
-    stats.messages = (stats.messages || 0) + 1;
-    stats.topChannel[msg.channelId] = (stats.topChannel[msg.channelId] || 0) + 1;
-
-    const emojiRegex = /<a?:\w+:\d+>/g;
-    let match;
-    while ((match = emojiRegex.exec(msg.content)) !== null) {
-      const emojiStr = match[0];
-      stats.topEmoji[emojiStr] = (stats.topEmoji[emojiStr] || 0) + 1;
-    }
-
-    msg.mentions.users.forEach(u => {
-      stats.topMentions[u.id] = (stats.topMentions[u.id] || 0) + 1;
-    });
-
-    saveWrappedStats();
-
     const countingChannelId = getCountingChannelId();
 
     // Enforce numeric-only in counting channel
@@ -235,12 +216,8 @@ module.exports = {
         (countingLeaderboard.get(msg.author.id) || 0) + 1
       );
 
-      const cStats = getUserStats(msg.author.id);
-      cStats.countingPoints = (cStats.countingPoints || 0) + 1;
-
       saveLeaderboard();
       saveSessions();
-      saveWrappedStats();
     } else {
       await msg.react("❌");
       session.lives--;

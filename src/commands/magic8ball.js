@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getUserStats, saveWrappedStats } = require("../utils/wrapped");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -34,10 +33,6 @@ module.exports = {
     ];
 
     const answer = responses[Math.floor(Math.random() * responses.length)];
-
-    const stats = getUserStats(i.user.id);
-    stats.magic8 = (stats.magic8 || 0) + 1;
-    saveWrappedStats();
 
     const embed = new EmbedBuilder()
       .setTitle("🎱 Magic 8 Ball")
