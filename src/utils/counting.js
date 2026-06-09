@@ -10,6 +10,8 @@ const DEFAULT_SESSION = Object.freeze({
 
 const countingSessions = new Map();
 const countingLeaderboard = new Map();
+const SAVE_FAILURE_PAUSE_MS = 5 * 60 * 1000;
+const savesPausedUntilByFile = new Map();
 
 function getCountingChannelId() {
   return process.env.COUNTING_CHANNEL_ID || DEFAULT_COUNTING_CHANNEL_ID;
@@ -45,10 +47,21 @@ function createSession() {
 }
 
 function saveCountingMap(file, map, transform = v => v) {
+  if (Date.now() < (savesPausedUntilByFile.get(file) || 0)) return false;
+
   try {
     saveMapToFile(file, map, transform);
     return true;
   } catch (err) {
+    if (err?.code === "ENOSPC") {
+      savesPausedUntilByFile.set(file, Date.now() + SAVE_FAILURE_PAUSE_MS);
+      console.error(
+        `Counting saves for ${file} paused for 5 minutes because the host reported no writable disk space. ` +
+          "Free disk space, fix the host write quota, or verify the data folder can be written to."
+      );
+      return false;
+    }
+
     console.error(`Failed to save counting data to ${file}:`, err);
     return false;
   }
