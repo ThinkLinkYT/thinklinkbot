@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, MessageFlags } = require("discord.js");
 
 function inferPanelStyle(message) {
   const text = String(message || "").trim();
@@ -56,10 +56,17 @@ function normalizeInteractionPayload(payload) {
 
   const hasText = typeof payload.content === "string" && payload.content.trim().length > 0;
   const hasEmbeds = Array.isArray(payload.embeds) && payload.embeds.length > 0;
-
-  if (!hasText || hasEmbeds) return payload;
-
   const nextPayload = { ...payload };
+
+  if (typeof nextPayload.ephemeral === "boolean") {
+    if (nextPayload.ephemeral) {
+      nextPayload.flags = (nextPayload.flags || 0) | MessageFlags.Ephemeral;
+    }
+    delete nextPayload.ephemeral;
+  }
+
+  if (!hasText || hasEmbeds) return nextPayload;
+
   delete nextPayload.content;
   nextPayload.embeds = [createPanel(payload.content)];
   return nextPayload;
@@ -69,7 +76,7 @@ function installInteractionPanelReplies(interaction) {
   if (interaction._panelRepliesInstalled) return;
   interaction._panelRepliesInstalled = true;
 
-  for (const methodName of ["reply", "editReply", "followUp", "update"]) {
+  for (const methodName of ["reply", "deferReply", "editReply", "followUp", "update"]) {
     if (typeof interaction[methodName] !== "function") continue;
     const original = interaction[methodName].bind(interaction);
     interaction[methodName] = (payload, ...args) =>

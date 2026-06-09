@@ -113,7 +113,7 @@ function handleSaveFailure(err) {
     savesPausedUntil = Date.now() + SAVE_FAILURE_PAUSE_MS;
     console.error(
       "Wrapped stats saves paused for 5 minutes because the host reported no writable disk space. " +
-        "Delete old data/*.tmp files and free space in the Pella file manager."
+        "Free disk space or delete old data/*.tmp files in your host file manager."
     );
     return;
   }

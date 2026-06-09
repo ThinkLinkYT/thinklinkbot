@@ -18,7 +18,14 @@ module.exports = {
       settings[userId] = !settings[userId];
     }
 
-    savePingSettings(settings);
+    const saved = savePingSettings(settings);
+
+    if (!saved) {
+      return interaction.reply({
+        content: "I could not save your ping setting because the host is not allowing data writes right now.",
+        ephemeral: true
+      });
+    }
 
     const newState = settings[userId];
 
