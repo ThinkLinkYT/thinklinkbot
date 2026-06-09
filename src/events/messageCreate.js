@@ -9,6 +9,7 @@ const {
   resetSession
 } = require("../utils/counting");
 const { cacheMessageForAudit } = require("../utils/messageAudit");
+const { handleHackedAccountSpam } = require("../utils/hackedAccountGuard");
 const crypto = require("crypto");
 
 const DUPLICATE_WINDOW_MS = 10 * 1000;
@@ -58,6 +59,7 @@ module.exports = {
     // Wait briefly so Discord can attach embeds (important for forwarded messages)
     await new Promise(res => setTimeout(res, 150));
     cacheMessageForAudit(msg);
+    if (await handleHackedAccountSpam(msg)) return;
 
     // ---------------------------
     // 1. MESSAGE SIGNATURE CHECK
